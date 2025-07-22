@@ -1,0 +1,8 @@
+backend: 
+cd to backend folder
+.\venv\Scripts\Activate.ps1
+uvicorn main:app --reload
+
+frontend:
+cd to frontend folder
+npm run dev

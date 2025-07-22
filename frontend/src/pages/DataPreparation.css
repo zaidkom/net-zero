@@ -1,0 +1,764 @@
+/* --- Data Preparation Page Styles --- */
+
+/* Root Layout */
+.nz-root {
+  min-height: 100vh;
+  width: 100vw;
+  background: #18181b;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: stretch;
+}
+
+/* Top Bar */
+.nz-topbar {
+  width: 100vw;
+  min-width: 0;
+  height: 60px;
+  background: rgba(24,24,27,0.95);
+  box-shadow: 0 2px 12px rgba(0,0,0,0.12);
+  display: flex;
+  align-items: center;
+  padding: 0 36px;
+  z-index: 10;
+  border-bottom: 1px solid #23272b;
+  margin-bottom: 20px;
+}
+
+.nz-title {
+  color: #fff !important;
+  font-size: 2.1rem !important;
+  font-weight: 900 !important;
+  letter-spacing: 1.5px;
+  margin: 0 !important;
+  text-shadow: 0 2px 8px #0002;
+}
+
+/* Main Layout */
+.nz-main-fixed {
+  flex: 1;
+  display: flex;
+  flex-direction: row;
+  height: calc(100vh - 60px);
+  width: 100vw;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  z-index: 2;
+  box-sizing: border-box;
+}
+
+/* Left and Right Panes */
+.nz-left-pane-fixed {
+  width: 15vw;
+  height: 85vh;
+  min-width: 180px;
+  max-width: 260px;
+  background: rgba(36, 39, 46, 0.92);
+  border: none;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  box-shadow: 0 2px 16px rgba(0,0,0,0.10);
+  z-index: 2;
+  margin: 0px;
+  border-radius: 0 18px 18px 0;
+  backdrop-filter: blur(8px);
+  padding: 32px 16px 32px 16px;
+  align-items: center;
+}
+
+.nz-right-pane-fixed {
+  width: 15vw;
+  height: 85vh;
+  min-width: 180px;
+  max-width: 260px;
+  background: rgba(36, 39, 46, 0.92);
+  border: none;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 2px 16px rgba(0,0,0,0.10);
+  z-index: 2;
+  margin: 0px;
+  border-radius: 18px 0 0 18px;
+  backdrop-filter: blur(8px);
+  padding: 32px 16px 32px 16px;
+  align-items: center;
+}
+
+
+/* Center Pane */
+.nz-center-pane-fixed {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  background: transparent;
+  overflow: hidden;
+  height: 85vh;
+  padding: 0 32px 0 32px;
+  margin: 0;
+  z-index: 2;
+  box-sizing: border-box;
+  gap: 0;
+  position: relative;
+}
+
+/* Query Editor */
+.nz-query-editor-fixed {
+  background: rgba(24,24,27,0.98);
+  border-radius: 16px;
+  box-shadow: 0 4px 24px #6366f122;
+  padding: 24px 24px 14px 24px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1.5px solid #23272b;
+  backdrop-filter: blur(6px);
+  margin-bottom: 0;
+  transition: height 0.1s ease;
+  position: absolute;
+  top: 0;
+  left: 32px;
+  right: 32px;
+}
+
+/* Drag Handle */
+.nz-drag-handle {
+  transition: background-color 0.2s ease;
+  user-select: none;
+  position: absolute;
+  left: 32px;
+  right: 32px;
+  z-index: 10;
+}
+
+.nz-drag-handle:hover {
+  background: #6366f1 !important;
+}
+
+/* Bottom Pane */
+.nz-bottom-pane-fixed {
+  background: rgba(24,24,27,0.98);
+  border-radius: 16px;
+  box-shadow: 0 4px 24px #6366f122;
+  padding: 12px 12px 12px 12px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  overflow: hidden;
+  border: 1.5px solid #23272b;
+  backdrop-filter: blur(6px);
+  margin-top: 0px;
+  position: absolute;
+  bottom: 0;
+  left: 32px;
+  right: 32px;
+  transition: height 0.1s ease;
+}
+
+.nz-bottom-pane-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+  flex-shrink: 0;
+}
+
+/* Table Container */
+.nz-table-container {
+  flex: 1;
+  overflow: auto;
+  min-height: 0;
+  max-height: calc(85vh - 200px);
+}
+
+.nz-table-container .ant-table-wrapper {
+  height: 100%;
+}
+
+.nz-table-container .ant-table {
+  height: 100%;
+}
+
+.nz-table-container .ant-table-body {
+  overflow-y: auto;
+  max-height: none;
+}
+
+/* Buttons */
+.nz-add-btn {
+  background: #18181b !important;
+  color: #7072c0 !important;
+  border: none !important;
+  box-shadow: 0 2px 8px #6366f122;
+}
+
+.nz-export-btn {
+  background: linear-gradient(90deg, #6366f1 0%, #0ea5e9 100%) !important;
+  border-radius: 8px !important;
+  font-weight: 700;
+  font-size: 1.08rem;
+  border: none !important;
+  box-shadow: 0 2px 12px #6366f122;
+  color: #fff !important;
+  padding: 0 20px;
+  margin-left: 12px;
+  transition: box-shadow 0.2s, background 0.2s;
+  float: right;
+}
+
+.nz-export-btn:hover {
+  box-shadow: 0 4px 24px #6366f144;
+  background: linear-gradient(90deg, #0ea5e9 0%, #6366f1 100%) !important;
+}
+
+.nz-run-btn {
+  background: linear-gradient(90deg, #6366f1 0%, #0ea5e9 100%) !important;
+  border-radius: 8px !important;
+  font-weight: 700;
+  border: none !important;
+  box-shadow: 0 2px 12px #6366f122;
+  color: #fff !important;
+  transition: box-shadow 0.2s;
+}
+
+.nz-run-btn:hover {
+  box-shadow: 0 4px 24px #6366f144;
+}
+
+.nz-back-btn {
+  background: #23272b !important;
+  color: #bfbfbf !important;
+  border: 1px solid #23272b !important;
+  border-radius: 8px !important;
+  font-weight: 600;
+  transition: all 0.2s;
+}
+
+.nz-back-btn:hover {
+  background: #18181b !important;
+  color: #fff !important;
+  border-color: #6366f1 !important;
+}
+
+/* Tabs */
+.nz-tabs .ant-tabs-tab {
+  color: #bfbfbf !important;
+  font-weight: 600;
+  padding: 8px 16px !important;
+  border-radius: 8px !important;
+  margin-right: 8px !important;
+  transition: all 0.2s;
+}
+
+.nz-tabs .ant-tabs-tab:hover {
+  color: #6366f1 !important;
+  background: rgba(99, 102, 241, 0.1) !important;
+}
+
+.nz-tabs .ant-tabs-tab-active {
+  background: #606174 !important;
+  color: #fff !important;
+  font-weight: 700;
+}
+
+.nz-tabs .ant-tabs-ink-bar {
+  display: none !important;
+}
+
+/* Query Text Area */
+.nz-query-area {
+  background: #23272b !important;
+  border: 1px solid #23272b !important;
+  border-radius: 8px !important;
+  color: #e0e0e0 !important;
+  font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace !important;
+  font-size: 14px !important;
+  line-height: 1.5 !important;
+  resize: none !important;
+  transition: border-color 0.2s;
+}
+
+.nz-query-area:focus {
+  border-color: #6366f1 !important;
+  box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2) !important;
+}
+
+.nz-query-area::placeholder {
+  color: #888 !important;
+}
+
+/* Table Styles */
+.nz-table .ant-table {
+  font-size: 11px !important;
+  border-radius: 8px !important;
+  background: #23272b !important;
+  box-shadow: none !important;
+}
+
+/* Add gridlines to cells */
+.nz-table .ant-table td, 
+.nz-table .ant-table th {
+  border: 1px solid #3a4046 !important; /* Adjust color to match your dark theme */
+}
+
+/* Remove inner borders to avoid double lines */
+.nz-table .ant-table-thead > tr > th {
+  border-bottom: 1px solid #3a4046 !important;
+}
+
+/* Optional: Add hover effect for rows */
+.nz-table .ant-table-tbody > tr:hover > td {
+  background: #2c3138 !important;
+}
+
+.nz-table .ant-table-thead > tr > th {
+  background: #23272b !important;
+  color: #ffffff !important;
+  font-weight: 700;
+  padding: 6px 8px !important;
+  border-bottom: 1px solid #23272b !important;
+}
+
+.nz-table .ant-table-tbody > tr > td {
+  background: #23272b !important;
+  color: #e0e0e0 !important;
+  padding: 4px 8px !important;
+  border-bottom: 1px solid #23272b !important;
+}
+
+.nz-table .ant-table-tbody > tr:last-child > td {
+  border-bottom: none !important;
+}
+
+.nz-table .ant-table-cell {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.nz-table .ant-table-content {
+  overflow-x: auto !important;
+}
+
+.nz-table .ant-table-thead > tr > th, .nz-table .ant-table-tbody > tr > td {
+  border-right: 1px solid #23272b !important;
+}
+
+.nz-table .ant-table-thead > tr > th:last-child, .nz-table .ant-table-tbody > tr > td:last-child {
+  border-right: none !important;
+}
+
+.nz-table .ant-table-tbody > tr:hover > td {
+  background: #18181b !important;
+}
+
+.nz-table .ant-table-placeholder {
+  background: #23272b !important;
+  color: #888 !important;
+}
+
+/* Timeline Styles */
+.nz-timeline-vertical {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 24px;
+  margin-top: 20px;
+  margin-bottom: 0;
+  width: 100%;
+  height: auto;
+}
+
+.nz-timeline-vertical .nz-circular-stage-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  position: relative;
+}
+
+.nz-timeline-vertical .nz-circular-arc {
+  width: 3px;
+  height: 24px;
+  background: linear-gradient(180deg, #6366f1 0%, #0ea5e9 100%);
+  border-radius: 2px;
+  margin: 8px auto;
+  opacity: 0.3;
+}
+
+.nz-timeline-vertical .nz-circular-arc-active {
+  opacity: 0.8;
+  background: linear-gradient(180deg, #6366f1 0%, #0ea5e9 100%);
+  box-shadow: 0 1px 4px #6366f144;
+}
+
+.nz-timeline-vertical .nz-circular-stage-label {
+  margin-top: 8px;
+  font-size: 0.9rem;
+  color: #bfbfbf;
+  font-weight: 600;
+  text-align: center;
+  width: 100%;
+  letter-spacing: 0.3px;
+  line-height: 1.2;
+}
+
+.nz-timeline-vertical .nz-circular-stage-active ~ .nz-circular-stage-label {
+  color: #6366f1;
+  font-weight: 700;
+}
+
+.nz-circular-stage {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: #214468;
+  border: 2px solid #23272b;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  cursor: pointer;
+}
+
+.nz-circular-stage:hover {
+  transform: scale(1.05);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+}
+
+.nz-circular-stage-active {
+  background: linear-gradient(135deg, #6366f1 0%, #0ea5e9 100%);
+  border-color: #6366f1;
+  box-shadow: 0 4px 16px #6366f144;
+  transform: scale(1.1);
+}
+
+.nz-circular-stage-number {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  background: #18181b;
+  color: #6366f1;
+  font-size: 9px;
+  font-weight: 900;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid #23272b;
+  z-index: 2;
+}
+
+.nz-circular-stage-active .nz-circular-stage-number {
+  background: #fff;
+  color: #6366f1;
+  border-color: #6366f1;
+}
+
+.nz-circular-stage-icon {
+  color: #bfbfbf;
+  font-size: 16px;
+  transition: color 0.3s ease;
+}
+
+.nz-circular-stage-active .nz-circular-stage-icon {
+  color: #fff;
+}
+
+/* Drag and Drop Upload Styles */
+.ant-upload-drag {
+  background: #23272b !important;
+  border: 2px dashed #6366f1 !important;
+  border-radius: 8px !important;
+  transition: all 0.3s ease !important;
+}
+
+.ant-upload-drag:hover {
+  border-color: #0ea5e9 !important;
+  background: rgba(99, 102, 241, 0.05) !important;
+}
+
+.ant-upload-drag.ant-upload-drag-hover {
+  border-color: #0ea5e9 !important;
+  background: rgba(99, 102, 241, 0.1) !important;
+  box-shadow: 0 4px 24px rgba(99, 102, 241, 0.2) !important;
+}
+
+.ant-upload-drag .ant-upload-drag-icon {
+  color: #6366f1 !important;
+}
+
+.ant-upload-drag .ant-upload-text {
+  color: #bfbfbf !important;
+  font-weight: 600 !important;
+}
+
+.ant-upload-drag .ant-upload-hint {
+  color: #888 !important;
+}
+
+/* File input styling */
+.nz-file-input {
+  color: #6366f1 !important;
+  background: transparent !important;
+  border: none !important;
+  text-decoration: underline !important;
+  cursor: pointer !important;
+  font-size: 12px !important;
+  transition: color 0.2s ease !important;
+}
+
+.nz-file-input:hover {
+  color: #0ea5e9 !important;
+}
+
+/* Modal styles for upload */
+.nz-upload-modal .ant-modal-content {
+  background: #23272b !important;
+  border: 1px solid #23272b !important;
+  border-radius: 12px !important;
+}
+
+.nz-upload-modal .ant-modal-header {
+  background: #23272b !important;
+  border-bottom: 1px solid #23272b !important;
+}
+
+.nz-upload-modal .ant-modal-title {
+  color: #bfbfbf !important;
+  font-weight: 600 !important;
+}
+
+.nz-upload-modal .ant-modal-close {
+  color: #888 !important;
+}
+
+.nz-upload-modal .ant-modal-close:hover {
+  color: #bfbfbf !important;
+}
+
+/* Statistics Collapse Styles */
+.nz-stats-collapse .ant-collapse-item {
+  border: none !important;
+  background: transparent !important;
+}
+
+.nz-stats-collapse .ant-collapse-header {
+  background: #23272b !important;
+  border-radius: 6px !important;
+  padding: 8px 12px !important;
+  color: #bfbfbf !important;
+  font-weight: 600 !important;
+}
+
+.nz-stats-collapse .ant-collapse-header:hover {
+  background: #2a2d35 !important;
+}
+
+.nz-stats-collapse .ant-collapse-content {
+  background: transparent !important;
+  border: none !important;
+}
+
+.nz-stats-collapse .ant-collapse-content-box {
+  padding: 8px 0 !important;
+  background: transparent !important;
+}
+
+.nz-stats-collapse .ant-collapse-arrow {
+  color: #6366f1 !important;
+}
+
+/* Tag styles for data types */
+.ant-tag {
+  border-radius: 4px !important;
+  font-weight: 600 !important;
+}
+
+/* Table rename edit button styles */
+.nz-table-edit-btn {
+  opacity: 0.6 !important;
+  transition: opacity 0.2s ease !important;
+}
+
+.nz-table-edit-btn:hover {
+  opacity: 1 !important;
+}
+
+.nz-table-delete-btn {
+  opacity: 0.6 !important;
+  transition: opacity 0.2s ease !important;
+}
+
+.nz-table-delete-btn:hover {
+  opacity: 1 !important;
+}
+
+.nz-table-edit-input {
+  background: #1a1a1a !important;
+  border: 1px solid #6366f1 !important;
+  color: #bfbfbf !important;
+  border-radius: 4px !important;
+}
+
+.nz-table-edit-input:focus {
+  border-color: #0ea5e9 !important;
+  box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2) !important;
+}
+
+/* Delete Modal Styles */
+.nz-delete-modal .ant-modal-content {
+  background: #23272b !important;
+  border: 1px solid #23272b !important;
+  border-radius: 12px !important;
+}
+
+.nz-delete-modal .ant-modal-header {
+  background: #23272b !important;
+  border-bottom: 1px solid #23272b !important;
+}
+
+.nz-delete-modal .ant-modal-title {
+  color: #bfbfbf !important;
+  font-weight: 600 !important;
+}
+
+.nz-delete-modal .ant-modal-body {
+  color: #bfbfbf !important;
+  background: #23272b !important;
+}
+
+.nz-delete-modal .ant-modal-footer {
+  background: #23272b !important;
+  border-top: 1px solid #23272b !important;
+}
+
+.nz-delete-modal .ant-btn-primary {
+  background: #ff4d4f !important;
+  border-color: #ff4d4f !important;
+  color: #fff !important;
+}
+
+.nz-delete-modal .ant-btn-primary:hover {
+  background: #ff7875 !important;
+  border-color: #ff7875 !important;
+}
+
+.nz-delete-modal .ant-btn-default {
+  background: #23272b !important;
+  border-color: #23272b !important;
+  color: #bfbfbf !important;
+}
+
+.nz-delete-modal .ant-btn-default:hover {
+  background: #2a2d35 !important;
+  border-color: #2a2d35 !important;
+  color: #fff !important;
+}
+
+.nz-delete-modal .ant-modal-close {
+  color: #888 !important;
+}
+
+.nz-delete-modal .ant-modal-close:hover {
+  color: #bfbfbf !important;
+}
+
+/* Filter Modal Styles */
+.nz-filter-modal .ant-modal-content {
+  background: #23272b !important;
+  border: 1px solid #23272b !important;
+  border-radius: 12px !important;
+}
+
+.nz-filter-modal .ant-modal-header {
+  background: #23272b !important;
+  border-bottom: 1px solid #23272b !important;
+}
+
+.nz-filter-modal .ant-modal-title {
+  color: #bfbfbf !important;
+  font-weight: 600 !important;
+}
+
+.nz-filter-modal .ant-modal-body {
+  color: #bfbfbf !important;
+  background: #23272b !important;
+}
+
+.nz-filter-modal .ant-input {
+  background: #1a1a1a !important;
+  border: 1px solid #23272b !important;
+  color: #bfbfbf !important;
+}
+
+.nz-filter-modal .ant-input:focus {
+  border-color: #6366f1 !important;
+  box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2) !important;
+}
+
+.nz-filter-modal .ant-btn {
+  background: #23272b !important;
+  border: 1px solid #23272b !important;
+  color: #bfbfbf !important;
+}
+
+.nz-filter-modal .ant-btn:hover {
+  background: #2a2d35 !important;
+  border-color: #6366f1 !important;
+  color: #6366f1 !important;
+}
+
+.nz-filter-modal .ant-modal-close {
+  color: #888 !important;
+}
+
+.nz-filter-modal .ant-modal-close:hover {
+  color: #bfbfbf !important;
+}
+
+/* Responsive Design */
+@media (max-width: 1200px) {
+  .nz-main-fixed {
+    padding: 0 0 0 0;
+  }
+  .nz-center-pane-fixed {
+    padding: 18px 4vw 0 4vw;
+  }
+  .nz-left-pane-fixed, .nz-right-pane-fixed {
+    padding: 18px 4px 18px 4px;
+  }
+}
+
+@media (max-width: 900px) {
+  .nz-main-fixed {
+    flex-direction: column;
+    height: auto;
+    min-height: 0;
+  }
+  .nz-left-pane-fixed, .nz-right-pane-fixed {
+    width: 100vw;
+    min-width: 0;
+    max-width: 100vw;
+    border-radius: 0;
+    border-left: none;
+    border-right: none;
+    box-shadow: none;
+    padding: 12px 4vw 12px 4vw;
+    height: auto;
+  }
+  .nz-center-pane-fixed {
+    padding: 8px 2vw 0 2vw;
+  }
+} 

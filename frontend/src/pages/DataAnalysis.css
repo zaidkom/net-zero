@@ -1,0 +1,194 @@
+/* Data Analysis Advanced Styles */
+
+.analysis-root {
+  min-height: 100vh;
+  width: 100vw;
+  background: linear-gradient(135deg, #1e2235 0%, #23243a 100%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 0;
+  position: relative;
+  overflow-x: hidden;
+}
+
+.analysis-topbar {
+  width: 100vw;
+  min-width: 0;
+  height: 64px;
+  background: rgba(30,34,53,0.98);
+  box-shadow: 0 2px 12px rgba(0,0,0,0.10);
+  display: flex;
+  align-items: center;
+  padding: 0 48px;
+  z-index: 10;
+  border-bottom: 1.5px solid #2a2d3e;
+  margin-bottom: 0;
+}
+
+.analysis-title {
+  color: #fff !important;
+  font-size: 2.2rem !important;
+  font-weight: 900 !important;
+  letter-spacing: 1.5px;
+  margin: 0 !important;
+  text-shadow: 0 2px 8px #0002;
+}
+
+.analysis-sidebar {
+  min-width: 280px;
+  max-width: 340px;
+  background: rgba(36, 39, 60, 0.92);
+  border-radius: 24px;
+  padding: 32px 24px;
+  margin-right: 40px;
+  margin-top: 32px;
+  box-shadow: 0 8px 32px #6366f144;
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+  height: fit-content;
+}
+
+.analysis-section-title {
+  color: #7f8cff;
+  font-size: 1.1rem;
+  font-weight: 700;
+  margin-bottom: 12px;
+  letter-spacing: 0.5px;
+}
+
+.analysis-list {
+  background: transparent;
+  color: #fff;
+  font-size: 1.08rem;
+  font-weight: 600;
+}
+
+.analysis-main-pane {
+  flex: 1;
+  max-width: 900px;
+  margin-top: 48px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.analysis-create-btn {
+  background: linear-gradient(90deg, #7f8cff 0%, #e14eca 100%);
+  color: #fff !important;
+  font-weight: 700;
+  font-size: 1.1rem;
+  border: none;
+  border-radius: 16px;
+  height: 52px;
+  width: 240px;
+  margin-bottom: 36px;
+  box-shadow: 0 4px 24px #7f8cff33;
+  transition: background 0.2s, box-shadow 0.2s, transform 0.2s;
+}
+.analysis-create-btn:hover {
+  background: linear-gradient(90deg, #e14eca 0%, #7f8cff 100%);
+  box-shadow: 0 8px 32px #e14eca44;
+  transform: scale(1.04);
+}
+
+.analysis-script-card {
+  background: rgba(36, 39, 60, 0.92);
+  border-radius: 24px;
+  box-shadow: 0 8px 32px #7f8cff33, 0 1.5px 0 #23243a;
+  padding: 32px 40px;
+  min-width: 340px;
+  max-width: 700px;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  transition: box-shadow 0.2s, transform 0.2s, background 0.2s;
+  cursor: pointer;
+  border: 1.5px solid #2a2d3e;
+  position: relative;
+  overflow: hidden;
+  backdrop-filter: blur(8px);
+  margin-bottom: 24px;
+}
+.analysis-script-card:hover {
+  box-shadow: 0 12px 48px #e14eca88, 0 2px 0 #7f8cff;
+  background: linear-gradient(90deg, #23243a 60%, #e14eca 100%);
+  transform: translateY(-2px) scale(1.025);
+}
+
+.analysis-script-title {
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: #fff;
+  letter-spacing: 0.5px;
+  flex: 1;
+  text-align: left;
+  text-shadow: 0 2px 8px #23243a44;
+}
+
+.analysis-script-actions {
+  display: flex;
+  gap: 12px;
+}
+
+.analysis-modal .ant-modal-content {
+  background: rgba(36, 39, 60, 0.98) !important;
+  border-radius: 18px !important;
+  color: #fff !important;
+}
+
+.analysis-modal .ant-modal-title {
+  color: #7f8cff !important;
+  font-weight: 700 !important;
+}
+
+.analysis-modal .ant-modal-close-x {
+  color: #fff !important;
+}
+
+.analysis-modal .ant-tabs-tab {
+  color: #bfbfbf !important;
+  font-weight: 600;
+  padding: 8px 16px !important;
+  border-radius: 8px !important;
+  margin-right: 8px !important;
+  transition: all 0.2s;
+}
+.analysis-modal .ant-tabs-tab-active {
+  background: #7f8cff !important;
+  color: #fff !important;
+  font-weight: 700;
+}
+
+.analysis-modal .ant-input, .analysis-modal .ant-input-textarea {
+  background: #23243a !important;
+  color: #fff !important;
+  border-radius: 8px !important;
+  border: 1.5px solid #2a2d3e !important;
+  font-size: 1.1rem !important;
+}
+
+.analysis-modal .ant-input:focus, .analysis-modal .ant-input-textarea:focus {
+  border-color: #7f8cff !important;
+  box-shadow: 0 0 0 2px #7f8cff33 !important;
+}
+
+@media (max-width: 900px) {
+  .analysis-main-pane {
+    max-width: 98vw;
+  }
+  .analysis-script-card {
+    min-width: 90vw;
+    max-width: 98vw;
+    padding: 20px 10px;
+  }
+  .analysis-sidebar {
+    min-width: 90vw;
+    max-width: 98vw;
+    margin-right: 0;
+    margin-bottom: 32px;
+  }
+} 
