@@ -85,6 +85,13 @@ const AppLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const navItems = workflowId
     ? [homeNavItem, ...workflowNavItems]
     : defaultNavItems;
+
+  // For collapsed state, show only icons
+  const collapsedNavItems = navItems.map(item => ({
+    ...item,
+    label: collapsed ? null : item.label,
+  }));
+
   // Fix: Only highlight Home when on home, otherwise highlight the correct workflow nav item
   let selectedKeys: string[] = [];
   if (location.pathname === '/') {
@@ -104,41 +111,53 @@ const AppLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   }
 
   return (
-    <Layout style={{ minHeight: '100vh' }}>
+    <Layout className="app-layout-root">
       {/* Sidebar for desktop */}
       <Sider
         collapsible
         collapsed={collapsed}
         onCollapse={setCollapsed}
         breakpoint="lg"
-        collapsedWidth={0}
+        collapsedWidth={64}
         trigger={null}
         width={240}
         className="app-sider"
-        style={{ position: 'fixed', left: 0, top: 0, bottom: 0, zIndex: 100 }}
       >
-        <div className="app-logo" style={{ height: 64, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 900, fontSize: 24, color: '#7f8cff', letterSpacing: 2 }}>
-          Net Zero
-        </div>
-        {/* Workflow name above nav if in workflow context */}
-        {workflowId && workflowName && (
-          <div style={{ fontWeight: 900, fontSize: 18, color: '#7f8cff', margin: '24px 0 8px 0', textAlign: 'center', letterSpacing: 1 }}>{workflowName}</div>
+        {collapsed ? (
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginTop: 8 }}>
+            <Button
+              type="text"
+              icon={<MenuUnfoldOutlined />}
+              onClick={() => setCollapsed(false)}
+              className="app-hamburger"
+              style={{ fontSize: 22, color: '#fff', marginBottom: 16 }}
+            />
+            <Menu
+              theme="dark"
+              mode="vertical"
+              selectedKeys={selectedKeys}
+              className="app-menu"
+              items={defaultNavItems.map(item => ({ ...item, label: null }))}
+              onClick={handleMenuClick}
+              style={{ border: 'none', background: 'transparent' }}
+            />
+          </div>
+        ) : (
+          <>
+            <div className="app-logo">Net Zero Analytics</div>
+            {workflowId && workflowName && (
+              <div className="workflow-name">{workflowName}</div>
+            )}
+            <Menu
+              theme="dark"
+              mode="inline"
+              selectedKeys={selectedKeys}
+              className="app-menu"
+              items={navItems}
+              onClick={handleMenuClick}
+            />
+          </>
         )}
-        <Menu
-          theme="dark"
-          mode="inline"
-          selectedKeys={selectedKeys}
-          style={{ flex: 1, background: 'transparent', border: 'none' }}
-          items={navItems}
-          onClick={handleMenuClick}
-        />
-        <Menu
-          theme="dark"
-          mode="inline"
-          style={{ position: 'absolute', bottom: 0, width: '100%', background: 'transparent', border: 'none' }}
-          items={[{ key: 'signout', label: 'Sign Out', icon: <LogoutOutlined /> }]}
-          onClick={handleMenuClick}
-        />
       </Sider>
       {/* Drawer for mobile */}
       <Drawer
@@ -146,53 +165,50 @@ const AppLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
         closable={false}
         onClose={() => setDrawerOpen(false)}
         open={drawerOpen}
-        bodyStyle={{ padding: 0, background: '#23243a' }}
-        width={220}
+        className="app-drawer"
       >
-        <div className="app-logo" style={{ height: 64, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 900, fontSize: 24, color: '#7f8cff', letterSpacing: 2 }}>
+        <div className="app-logo app-logo-mobile">
           Net Zero
         </div>
         {workflowId && workflowName && (
-          <div style={{ fontWeight: 900, fontSize: 18, color: '#7f8cff', margin: '24px 0 8px 0', textAlign: 'center', letterSpacing: 1 }}>{workflowName}</div>
+          <div className="workflow-name workflow-name-mobile">{workflowName}</div>
         )}
         <Menu
           theme="dark"
           mode="inline"
           selectedKeys={selectedKeys}
-          style={{ background: 'transparent', border: 'none' }}
+          className="app-menu"
           items={navItems}
           onClick={handleMenuClick}
         />
         <Menu
           theme="dark"
           mode="inline"
-          style={{ position: 'absolute', bottom: 0, width: '100%', background: 'transparent', border: 'none' }}
+          className="app-menu app-menu-bottom"
           items={[{ key: 'signout', label: 'Sign Out', icon: <LogoutOutlined /> }]}
           onClick={handleMenuClick}
         />
       </Drawer>
-      <Layout style={{ marginLeft: collapsed ? 0 : 240, transition: 'margin-left 0.2s' }}>
-        <Header className="app-header" style={{ background: '#1e2235', padding: '0 32px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: 64, position: 'sticky', top: 0, zIndex: 99 }}>
+      <Layout className={collapsed ? "app-main-collapsed" : "app-main"}>
+        <Header className="app-header">
           <Button
             type="text"
             icon={collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
             onClick={() => setCollapsed(!collapsed)}
-            style={{ fontSize: 22, color: '#fff', marginRight: 16, display: 'none', border: 'none' }}
             className="app-hamburger"
           />
           <Button
             type="text"
             icon={<MenuUnfoldOutlined />}
             onClick={() => setDrawerOpen(true)}
-            style={{ fontSize: 22, color: '#fff', marginRight: 16, display: 'block', border: 'none' }}
             className="app-hamburger-mobile"
           />
-          <div style={{ flex: 1 }} />
+          <div className="app-header-spacer" />
           <Dropdown overlay={userMenu} placement="bottomRight" trigger={["click"]}>
-            <Avatar size={40} style={{ background: 'linear-gradient(135deg, #7f8cff 0%, #e14eca 100%)', cursor: 'pointer' }} icon={<UserOutlined />} />
+            <Avatar size={40} className="app-avatar" icon={<UserOutlined />} />
           </Dropdown>
         </Header>
-        <Content style={{ margin: '32px 24px 0 24px', minHeight: 'calc(100vh - 64px)', background: 'transparent' }}>
+        <Content className="app-content">
           {children}
         </Content>
       </Layout>

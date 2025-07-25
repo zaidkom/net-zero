@@ -12,6 +12,7 @@ import os
 from fastapi.responses import FileResponse
 import traceback
 import pandasql
+from typing import Optional, Dict, Any
 
 UPLOAD_DIR = os.path.join(os.path.dirname(__file__), 'uploads')
 os.makedirs(UPLOAD_DIR, exist_ok=True)
@@ -290,8 +291,41 @@ def run_analysis_script(
     workflow_id: int = Body(...),
     script: str = Body(...),
     script_type: str = Body(...),
+    tables: Optional[Dict[str, Any]] = Body(None),
     db: Session = Depends(get_db)
 ):
+    """
+    Run an analysis script (SQL or Python) using provided tables (as dict of table_name -> data).
+    If 'tables' is provided, use these as the context for execution.
+    If not, fall back to loading dataframes and saved queries from workflow.
+    """
+    import pandas as pd
+    import pandasql
+    import traceback
+    import os
+    import json
+    # If tables are provided, use them directly
+    if tables is not None:
+        # Convert all tables to DataFrames
+        dataframes = {k: pd.DataFrame(v) for k, v in tables.items()}
+        if script_type == "sql":
+            try:
+                result = pandasql.sqldf(script, dataframes)
+                return {"result": result.to_dict(orient="records")}
+            except Exception as e:
+                return {"error": str(e), "trace": traceback.format_exc()}
+        elif script_type == "python":
+            local_vars = {**dataframes}
+            try:
+                exec_globals = {}
+                exec(script, exec_globals, local_vars)
+                output = {k: v.to_dict(orient="records") for k, v in local_vars.items() if isinstance(v, pd.DataFrame)}
+                return {"result": output}
+            except Exception as e:
+                return {"error": str(e), "trace": traceback.format_exc()}
+        else:
+            return {"error": "Unknown script type"}
+    # Fallback: legacy logic
     # Load workflow
     w = db.query(Workflow).filter(Workflow.id == workflow_id).first()
     if not w or not w.data_prep:

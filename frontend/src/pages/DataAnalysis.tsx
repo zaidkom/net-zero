@@ -4,16 +4,21 @@ import { clearLoggedIn } from '../auth';
 import { useNavigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { getCurrentUsername } from '../auth';
-import { Button, Modal, Input, Tabs, List, Typography, message, Tooltip, Card } from 'antd';
-import { PlusOutlined, EditOutlined, DeleteOutlined, FileTextOutlined } from '@ant-design/icons';
+import { Button, Modal, Input, Tabs, List, Typography, message, Tooltip, Card, Spin } from 'antd';
+import { PlusOutlined, EditOutlined, DeleteOutlined, FileTextOutlined, UploadOutlined, DownloadOutlined, PlayCircleOutlined, SaveOutlined, ExperimentOutlined } from '@ant-design/icons';
 import './DataAnalysis.css';
 import AppLayout from '../components/Layout';
+import CodeMirror from '@uiw/react-codemirror';
+import { sql } from '@codemirror/lang-sql';
+import { python } from '@codemirror/lang-python';
+import { oneDark } from '@codemirror/theme-one-dark';
 
 const { Title } = Typography;
 
 interface Script {
   id: string;
   name: string;
+  description?: string;
   type: 'sql' | 'python';
   code: string;
 }
@@ -28,6 +33,21 @@ interface DataAnalysisProps {
   workflowId?: string;
 }
 
+// Utility to extract table/query names from script (simple regex for SQL identifiers)
+function extractReferencedTables(script: string, savedQueries: any[]): string[] {
+  const names = savedQueries.map(q => q.name);
+  // Match words that are valid identifiers and in savedQueries
+  const regex = /\b([a-zA-Z_][a-zA-Z0-9_]*)\b/g;
+  const found = new Set<string>();
+  let match;
+  while ((match = regex.exec(script)) !== null) {
+    if (names.includes(match[1])) {
+      found.add(match[1]);
+    }
+  }
+  return Array.from(found);
+}
+
 const DataAnalysis: React.FC<DataAnalysisProps> = ({ workflowId }) => {
   const currentStage = 1;
   const navigate = useNavigate();
@@ -35,6 +55,7 @@ const DataAnalysis: React.FC<DataAnalysisProps> = ({ workflowId }) => {
   const [modalOpen, setModalOpen] = useState(false);
   const [editingScript, setEditingScript] = useState<Script | null>(null);
   const [scriptName, setScriptName] = useState('');
+  const [scriptDescription, setScriptDescription] = useState('');
   const [scriptType, setScriptType] = useState<'sql' | 'python'>('sql');
   const [scriptCode, setScriptCode] = useState('');
   const [dataframes, setDataframes] = useState<any[]>([]); // sources from data prep
@@ -45,6 +66,7 @@ const DataAnalysis: React.FC<DataAnalysisProps> = ({ workflowId }) => {
   const [saveLoading, setSaveLoading] = useState(false);
   const [dirty, setDirty] = useState(false);
   const [justSaved, setJustSaved] = useState(false);
+  const [testLoading, setTestLoading] = useState(false);
 
   // Load scripts from workflow.analysis on mount
   useEffect(() => {
@@ -137,6 +159,7 @@ const DataAnalysis: React.FC<DataAnalysisProps> = ({ workflowId }) => {
   const openCreateModal = () => {
     setEditingScript(null);
     setScriptName('');
+    setScriptDescription('');
     setScriptType('sql');
     setScriptCode('');
     setModalOpen(true);
@@ -144,6 +167,7 @@ const DataAnalysis: React.FC<DataAnalysisProps> = ({ workflowId }) => {
   const openEditModal = (script: Script) => {
     setEditingScript(script);
     setScriptName(script.name);
+    setScriptDescription(script.description || '');
     setScriptType(script.type);
     setScriptCode(script.code);
     setModalOpen(true);
@@ -155,13 +179,14 @@ const DataAnalysis: React.FC<DataAnalysisProps> = ({ workflowId }) => {
     }
     if (editingScript) {
       // Edit existing
-      const updated = scripts.map(s => s.id === editingScript.id ? { ...s, name: scriptName, type: scriptType, code: scriptCode } : s);
+      const updated = scripts.map(s => s.id === editingScript.id ? { ...s, name: scriptName, description: scriptDescription, type: scriptType, code: scriptCode } : s);
       saveScripts(updated);
     } else {
       // Create new
       const newScript: Script = {
         id: `script_${Date.now()}`,
         name: scriptName,
+        description: scriptDescription,
         type: scriptType,
         code: scriptCode,
       };
@@ -189,94 +214,291 @@ const DataAnalysis: React.FC<DataAnalysisProps> = ({ workflowId }) => {
     navigate('/login');
   };
 
-  const handleRunScript = async (script: Script) => {
+  const handleRunScript = async (scriptObj: Script) => {
     if (!workflowId) return;
     setRunLoading(true);
     setRunModalOpen(true);
     setRunResult(null);
     try {
+      // 1. Build base tables from dataframes
+      const tables: Record<string, any[]> = {};
+      dataframes.forEach((df: any) => {
+        if (df.tableName && Array.isArray(df.data)) {
+          tables[df.tableName] = df.data;
+        }
+      });
+      // 2. Find referenced saved queries
+      const referenced = extractReferencedTables(scriptObj.code, queries);
+      // 3. For each referenced saved query, execute it and add its result to tables
+      for (const qName of referenced) {
+        const q = queries.find(q => q.name === qName);
+        if (q) {
+          // Call backend to execute the saved query
+          const res = await fetch('http://localhost:8000/api/execute-query', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              query: q.query,
+              language: q.type,
+              tables,
+            }),
+          });
+          const execData = await res.json();
+          if (execData && Array.isArray(execData.data)) {
+            tables[qName] = execData.data;
+          } else if (execData && execData.result) {
+            // For python, result is a dict of tables
+            if (typeof execData.result === 'object') {
+              // If the query name is in result, use it; else, use the first table
+              if (Array.isArray(execData.result[qName])) {
+                tables[qName] = execData.result[qName];
+              } else {
+                const firstTable = Object.values(execData.result).find(v => Array.isArray(v));
+                tables[qName] = firstTable || [];
+              }
+            }
+          } else {
+            tables[qName] = [];
+          }
+        }
+      }
+      // 4. Run the analysis script with all tables
       const res = await fetch('http://localhost:8000/run_analysis_script', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           workflow_id: Number(workflowId),
-          script: script.code,
-          script_type: script.type,
+          script: scriptObj.code,
+          script_type: scriptObj.type,
+          tables,
         }),
       });
-      const data = await res.json();
-      setRunResult(data);
+      const resultData = await res.json();
+      setRunResult(resultData);
     } catch (err) {
       setRunResult({ error: 'Failed to run script' });
     } finally {
       setRunLoading(false);
     }
   };
+
+  // Test all scripts handler
+  const handleTestScripts = async () => {
+    if (!scripts || scripts.length === 0) {
+      message.info('No scripts to test.');
+      return;
+    }
+    setTestLoading(true);
+    const failed: string[] = [];
+    console.log('Testing scripts:', scripts.map(s => s.name));
+    for (const scriptObj of scripts) {
+      try {
+        // 1. Build base tables from dataframes
+        const tables: Record<string, any[]> = {};
+        dataframes.forEach((df: any) => {
+          if (df.tableName && Array.isArray(df.data)) {
+            tables[df.tableName] = df.data;
+          }
+        });
+        // 2. Find referenced saved queries
+        const referenced = extractReferencedTables(scriptObj.code, queries);
+        // 3. For each referenced saved query, execute it and add its result to tables
+        for (const qName of referenced) {
+          const q = queries.find(q => q.name === qName);
+          if (q) {
+            const res = await fetch('http://localhost:8000/api/execute-query', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                query: q.query,
+                language: q.type,
+                tables,
+              }),
+            });
+            const execData = await res.json();
+            if (execData && Array.isArray(execData.data)) {
+              tables[qName] = execData.data;
+            } else if (execData && execData.result) {
+              if (typeof execData.result === 'object') {
+                if (Array.isArray(execData.result[qName])) {
+                  tables[qName] = execData.result[qName];
+                } else {
+                  const firstTable = Object.values(execData.result).find(v => Array.isArray(v));
+                  tables[qName] = firstTable || [];
+                }
+              }
+            } else {
+              tables[qName] = [];
+            }
+          }
+        }
+        // 4. Run the analysis script with all tables
+        const res = await fetch('http://localhost:8000/run_analysis_script', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            workflow_id: Number(workflowId),
+            script: scriptObj.code,
+            script_type: scriptObj.type,
+            tables,
+          }),
+        });
+        const resultData = await res.json();
+        if (resultData.error) {
+          failed.push(scriptObj.name);
+        }
+      } catch (err) {
+        failed.push(scriptObj.name);
+      }
+    }
+    setTestLoading(false);
+    console.log('Failed scripts:', failed);
+    if (failed.length === 0) {
+      message.success('All scripts executed successfully!');
+    } else {
+      message.error(`Failed scripts: ${failed.join(', ')}`);
+    }
+  };
+
+  const handleImportScript = (scriptId: string) => (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const text = e.target?.result as string;
+      let type: 'sql' | 'python' = 'sql';
+      if (file.name.endsWith('.py')) type = 'python';
+      if (file.name.endsWith('.sql')) type = 'sql';
+      setScripts(prev => prev.map(s =>
+        s.id === scriptId ? { ...s, code: text, type } : s
+      ));
+      message.success('Script imported successfully!');
+    };
+    reader.readAsText(file);
+  };
+
+  const handleExportScript = (script: Script) => {
+    const blob = new Blob([script.code], { type: 'text/plain' });
+    const ext = script.type === 'python' ? 'py' : 'sql';
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `${script.name || 'script'}.${ext}`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(a.href);
+    message.success('Script exported successfully!');
+  };
   return (
     <AppLayout>
-      <div style={{ maxWidth: 900, margin: '0 auto', padding: '32px 0', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-        <div style={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-          <Title level={3} style={{ fontSize: 22, fontWeight: 700, margin: 0 }}>Data Analysis</Title>
-          <Button type="primary" style={{ fontWeight: 700, borderRadius: 8 }}
-            loading={saveLoading}
-            disabled={!dirty || saveLoading || justSaved}
-            onClick={saveWorkflow}
-          >
-            {justSaved ? 'Saved' : 'Save Workflow'}
-          </Button>
-        </div>
-        <Button style={{ alignSelf: 'flex-end', marginBottom: 24 }} onClick={() => navigate(-1)}>Back</Button>
-        <div style={{ width: '100%', display: 'flex', flexDirection: 'row', gap: 32, justifyContent: 'center' }}>
-          {/* Sidebar: DataFrames and Queries */}
-          <div style={{ minWidth: 220, maxWidth: 280, background: 'rgba(36, 39, 60, 0.92)', borderRadius: 18, padding: 24, boxShadow: '0 4px 24px #6366f122', display: 'flex', flexDirection: 'column', gap: 24 }}>
-            <div style={{ color: '#7f8cff', fontSize: 16, fontWeight: 700, marginBottom: 8 }}>Available DataFrames</div>
-            <List
-              size="small"
-              dataSource={dataframes}
-              locale={{ emptyText: 'No dataframes' }}
-              renderItem={item => (
-                <List.Item style={{ color: '#fff', fontWeight: 600 }}>{item.tableName}</List.Item>
-              )}
-              style={{ marginBottom: 24 }}
-            />
-            <div style={{ color: '#7f8cff', fontSize: 16, fontWeight: 700, marginBottom: 8 }}>Saved Queries</div>
-            <List
-              size="small"
-              dataSource={queries}
-              locale={{ emptyText: 'No queries' }}
-              renderItem={item => (
-                <List.Item style={{ color: '#fff', fontWeight: 600 }}>{item.name}</List.Item>
-              )}
-            />
+      <div className="data-preparation-container">
+        {/* Header */}
+        <div className="header-section">
+          <div className="header-content">
+            <div className="header-title">
+              <BarChartOutlined className="header-icon" />
+              <h1>Data Analysis</h1>
+              <span className="stage-indicator">Stage 2 of 3</span>
+            </div>
+            <div className="header-actions">
+              <Button 
+                type="primary" 
+                icon={<SaveOutlined />} 
+                loading={saveLoading}
+                disabled={!dirty || saveLoading || justSaved}
+                onClick={saveWorkflow}
+                className="save-button"
+              >
+                {justSaved ? 'Saved' : 'Save Workflow'}
+              </Button>
+            </div>
           </div>
-          {/* Main Pane: Scripts */}
-          <div style={{ flex: 1, minWidth: 320, maxWidth: 600, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-            <Button type="primary" icon={<PlusOutlined />} onClick={openCreateModal} style={{ background: 'linear-gradient(90deg, #7f8cff 0%, #e14eca 100%)', color: '#fff', fontWeight: 700, fontSize: 16, border: 'none', borderRadius: 12, height: 44, width: 200, marginBottom: 24, boxShadow: '0 2px 12px #7f8cff33' }}>
-              Create Script
-            </Button>
-            <div style={{ width: '100%' }}>
-              <List
-                grid={{ gutter: 24, column: 1 }}
-                dataSource={scripts}
-                locale={{ emptyText: 'No scripts yet. Create your first script!' }}
-                renderItem={item => (
-                  <List.Item>
-                    <Card
-                      style={{ background: 'rgba(36, 39, 60, 0.92)', borderRadius: 18, boxShadow: '0 4px 24px #7f8cff33', padding: '24px 32px', minWidth: 280, maxWidth: 600, width: '100%', color: '#fff', fontSize: 15, border: '1.5px solid #2a2d3e', marginBottom: 16 }}
-                      actions={[
-                        <Tooltip title="Run"><Button type="link" onClick={() => handleRunScript(item)}>Run</Button></Tooltip>,
-                        <Tooltip title="Edit"><EditOutlined onClick={() => openEditModal(item)} /></Tooltip>,
-                        <Tooltip title="Delete"><DeleteOutlined onClick={() => handleDelete(item.id)} /></Tooltip>
-                      ]}
-                      title={<span style={{ fontSize: 18, fontWeight: 700, color: '#fff', letterSpacing: 0.5 }}><FileTextOutlined style={{ marginRight: 8 }} />{item.name}</span>}
-                      extra={<span style={{ color: '#bfbfbf', fontWeight: 500 }}>{item.type.toUpperCase()}</span>}
-                      bodyStyle={{ color: '#bfbfbf', fontSize: 14, minHeight: 32, maxHeight: 80, overflow: 'auto', fontFamily: 'monospace' }}
-                    >
-                      <div style={{ whiteSpace: 'pre-line' }}>{item.code.slice(0, 200)}{item.code.length > 200 ? '...' : ''}</div>
-                    </Card>
-                  </List.Item>
-                )}
-              />
+        </div>
+        {/* Main Content */}
+        <div className="main-content">
+          {/* Left Sidebar */}
+          <div className="sidebar left-sidebar">
+            <div className="sidebar-panels-container">
+              <div className="panel-section">
+                <div className="panel-header">
+                  <h3>Data Sources</h3>
+                </div>
+                <List className="datasources-list-analysis"
+                  size="small"
+                  dataSource={dataframes}
+                  locale={{ emptyText: 'No dataframes' }}
+                  renderItem={item => (
+                    <List.Item style={{ color: '#fff'}}>{item.tableName}</List.Item>
+                  )}
+                />
+              </div>
+              <div className="panel-section">
+                <div className="panel-header">
+                  <h3>Saved Queries</h3>
+                </div>
+                <List className="query-list-analysis"
+                  size="small"
+                  dataSource={queries}
+                  locale={{ emptyText: 'No queries' }}
+                  renderItem={item => (
+                    <List.Item style={{ color: '#fff'}}>{item.name}</List.Item>
+                  )}
+                />
+              </div>
+            </div>
+          </div>
+          {/* Center Content */}
+          <div className="center-content">
+            <div className="query-editor-section">
+              <div className="script-toolbar">
+                <Button type="primary" icon={<PlusOutlined />} onClick={openCreateModal} className="run-button create-script-btn">
+                  Create Script
+                </Button>
+                <Button
+                  type="default"
+                  icon={<ExperimentOutlined />} 
+                  className="test-scripts-btn"
+                  loading={testLoading}
+                  disabled={testLoading || scripts.length === 0}
+                  onClick={handleTestScripts}
+                >
+                  Test All Scripts
+                </Button>
+              </div>
+              <div className="script-list-wrapper">
+                <List
+                  grid={{ gutter: 16, column: 1 }}
+                  dataSource={scripts}
+                  locale={{ emptyText: 'No scripts yet. Create your first script!' }}
+                  renderItem={item => (
+                    <List.Item className="script-list-item">
+                      <div className="script-card">
+                        <div className="script-card-content">
+                          <div className="script-card-main">
+                            <span><span className="script-label">Script Name:</span> <span className="script-title">{item.name}</span></span>
+                            <span><span className="script-label">Script Type:</span> <span className="script-type">{item.type.toUpperCase()}</span></span>
+                            <span><span className="script-label">Description:</span> <span className="script-description">{item.description || ''}</span></span>
+                          </div>
+                          <div className="script-card-actions">
+                            <Tooltip title="Run"><Button type="text" size="small" icon={<PlayCircleOutlined />} className="run-script-btn" onClick={() => handleRunScript(item)} /></Tooltip>
+                            <Tooltip title="Edit"><Button type="text" size="small" icon={<EditOutlined />} className="edit-script-btn" onClick={() => openEditModal(item)} /></Tooltip>
+                            <Tooltip title="Delete"><Button type="text" size="small" icon={<DeleteOutlined />} className="delete-script-btn" onClick={() => handleDelete(item.id)} /></Tooltip>
+                            <Tooltip title="Import Script">
+                              <label className="import-script-btn">
+                                <UploadOutlined />
+                                <input type="file" accept=".sql,.py,.txt" style={{ display: 'none' }} onChange={handleImportScript(item.id)} />
+                              </label>
+                            </Tooltip>
+                            <Tooltip title="Export Script">
+                              <Button type="text" size="small" icon={<DownloadOutlined />} className="export-script-btn" onClick={() => handleExportScript(item)} />
+                            </Tooltip>
+                          </div>
+                        </div>
+                      </div>
+                    </List.Item>
+                  )}
+                />
+              </div>
             </div>
           </div>
         </div>
@@ -290,26 +512,34 @@ const DataAnalysis: React.FC<DataAnalysisProps> = ({ workflowId }) => {
           cancelText="Cancel"
           centered
           width={600}
+          className="save-query-modal"
           style={{ top: 80 }}
-          bodyStyle={{ background: 'rgba(36, 39, 60, 0.98)', borderRadius: 18, color: '#fff' }}
         >
           <Input
             placeholder="Script Name"
             value={scriptName}
             onChange={e => setScriptName(e.target.value)}
-            style={{ marginBottom: 16, fontSize: 16 }}
+            className="script-modal-input script-modal-title"
           />
-          <Tabs activeKey={scriptType} onChange={key => setScriptType(key as 'sql' | 'python')} style={{ marginBottom: 8 }}>
+          <Input
+            placeholder="Description (optional)"
+            value={scriptDescription}
+            onChange={e => setScriptDescription(e.target.value)}
+            className="script-modal-input script-modal-description"
+          />
+          <Tabs activeKey={scriptType} onChange={key => setScriptType(key as 'sql' | 'python')} className="script-modal-tabs">
             <Tabs.TabPane tab="SQL" key="sql" />
             <Tabs.TabPane tab="Python" key="python" />
           </Tabs>
-          <Input.TextArea
-            rows={10}
-            value={scriptCode}
-            onChange={e => setScriptCode(e.target.value)}
-            placeholder={scriptType === 'sql' ? 'Write your SQL script here...' : 'Write your Python script here...'}
-            style={{ fontFamily: 'monospace', fontSize: 15 }}
-          />
+          <div className="script-modal-editor">
+            <CodeMirror
+              value={scriptCode}
+              height="180px"
+              theme={oneDark}
+              extensions={scriptType === 'sql' ? [sql()] : [python()]}
+              onChange={(val: string) => setScriptCode(val)}
+            />
+          </div>
         </Modal>
         <Modal
           open={runModalOpen}
